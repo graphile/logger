@@ -163,7 +163,14 @@ heavily documented); here's an illustrative example:
 ```ts
 import { Logger, makeConsoleLogFactory } from "@graphile/logger";
 
-const graphileWorkerDefaultLogger = new Logger(
+interface LogScope {
+  label?: string;
+  workerId?: string;
+  taskIdentifier?: string;
+  jobId?: string;
+}
+
+const graphileWorkerDefaultLogger = new Logger<LogScope>(
   makeConsoleLogFactory({
     format: `[%s%s] %s: %s`,
     formatParameters(level, message, scope) {
@@ -179,7 +186,7 @@ const graphileWorkerDefaultLogger = new Logger(
   }),
 );
 
-function worker(logger: Logger = graphileWorkerDefaultLogger) {
+function worker(logger: Logger<LogScope> = graphileWorkerDefaultLogger) {
   logger.info("Starting worker cluster...");
 
   // ...

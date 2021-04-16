@@ -41,7 +41,7 @@ export const enum LogLevel {
  * The `LogFunctionFactory` is a user-provided function that receives a scope
  * and returns a `LogFunction` that is responsible for processing log messages.
  */
-export interface LogFunctionFactory<TLogScope extends Record<string, unknown>> {
+export interface LogFunctionFactory<TLogScope extends {}> {
   (scope: Partial<TLogScope>): LogFunction;
 }
 
@@ -62,7 +62,7 @@ export interface LogFunction {
  * debug) which pass through to the underlying `LogFunction`. It also allows a
  * narrower scoped logger to be generated via the `scope` method.
  */
-export class Logger<TLogScope extends Record<string, unknown> = {}> {
+export class Logger<TLogScope extends {} = {}> {
   private _scope: Partial<TLogScope>;
   private _logFactory: LogFunctionFactory<TLogScope>;
 
@@ -85,7 +85,7 @@ export class Logger<TLogScope extends Record<string, unknown> = {}> {
    * When the HTTP requests goes through a particular middleware it might use
    * an even more narrowly scoped logger still.
    */
-  public scope<TNewLogScope extends Record<string, unknown>>(
+  public scope<TNewLogScope extends {}>(
     additionalScope: Partial<TNewLogScope>,
   ) {
     return new Logger<TLogScope & TNewLogScope>(this._logFactory, {
@@ -163,9 +163,7 @@ export interface ConsoleLogConfig<TLogScope> {
  * `DEBUG` level messages if the `GRAPHILE_LOGGER_DEBUG` environmental variable
  * is set.
  */
-export function makeConsoleLogFactory<
-  TLogScope extends Record<string, unknown>
->(
+export function makeConsoleLogFactory<TLogScope extends {}>(
   { format, formatParameters }: ConsoleLogConfig<TLogScope> = {
     format: "%s: %s (%O)",
     formatParameters(level, message, scope) {
@@ -179,7 +177,7 @@ export function makeConsoleLogFactory<
         return;
       }
 
-      let method = (() => {
+      const method = (() => {
         switch (level) {
           case LogLevel.ERROR:
             return "error" as const;
