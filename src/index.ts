@@ -62,7 +62,7 @@ export interface LogFunction {
  * debug) which pass through to the underlying `LogFunction`. It also allows a
  * narrower scoped logger to be generated via the `scope` method.
  */
-export class Logger<TLogScope extends Record<string, unknown>> {
+export class Logger<TLogScope extends Record<string, unknown> = {}> {
   private _scope: Partial<TLogScope>;
   private _logFactory: LogFunctionFactory<TLogScope>;
 
