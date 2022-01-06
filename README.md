@@ -65,7 +65,7 @@ Here's an example of logging with
 [bunyan](https://github.com/trentm/node-bunyan):
 
 ```ts
-import { Logger, LogLevel } from "@graphile/logger";
+import { Logger } from "@graphile/logger";
 import bunyan from "bunyan";
 
 const bunyanLog = bunyan.createLogger({ name: "myapp" });
@@ -74,13 +74,13 @@ const logger = new Logger((scope) => {
   const scopedBunyanLog = bunyanLog.child(scope);
   return (level, message, meta) => {
     switch (level) {
-      case LogLevel.ERROR:
+      case "error":
         return scopedBunyanLog.error(`%s`, message, meta);
-      case LogLevel.WARNING:
+      case "warning":
         return scopedBunyanLog.warn(`%s`, message, meta);
-      case LogLevel.DEBUG:
+      case "debug":
         return scopedBunyanLog.debug(`%s`, message, meta);
-      case LogLevel.INFO:
+      case "info":
       default:
         return scopedBunyanLog.info(`%s`, message, meta);
     }
