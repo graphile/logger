@@ -95,6 +95,13 @@ export class Logger<TLogScope extends {} = {}> {
   }
 
   /**
+   * Get the current scope of the logger.
+   */
+  public getCurrentScope() {
+    return this._scope;
+  }
+
+  /**
    * Logs an `LogLevel.ERROR` message.
    */
   public error(message: string, meta?: LogMeta): void {
