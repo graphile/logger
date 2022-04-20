@@ -41,7 +41,7 @@ simple _log function factory_ which logs to `console`:
 ```js
 function logFunctionFactory(scope) {
   return function logFunction(level, message, meta) {
-    console.log(`${level}: ${message});
+    console.log(`${level}: ${message}`);
   }
 }
 ```
