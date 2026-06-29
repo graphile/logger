@@ -133,8 +133,10 @@ export class Logger<TLogScope extends {} = {}> {
  * pass this custom config to `makeConsoleLogFactory` to log in a different
  * format - perhaps log your scope information more clearly, or add a touch of
  * colour.
+ *
+ * This variant is optimized for fixed format strings.
  */
-export interface ConsoleLogConfig<TLogScope> {
+export interface ConsoleLogConfigObject<TLogScope> {
   /**
    * Format string passed to the relevant console method; these format strings
    * are processed via `util.format`:
@@ -161,11 +163,70 @@ export interface ConsoleLogConfig<TLogScope> {
     message: string,
     scope: Partial<TLogScope>,
     meta: LogMeta,
-  ): Array<unknown>;
+  ): ReadonlyArray<unknown>;
 }
+
+/**
+ * If you don't like the simple format of our default console logging, you can
+ * pass this custom config to `makeConsoleLogFactory` to log in a different
+ * format - perhaps log your scope information more clearly, or add a touch of
+ * colour.
+ *
+ * This variant allows for dynamic format strings.
+ */
+export type ConsoleLogConfigCallback<TLogScope> = (
+  level: LogLevel,
+  message: string,
+  scope: Partial<TLogScope>,
+  meta: LogMeta,
+) => {
+  /**
+   * Format string passed to the relevant console method; these format strings
+   * are processed via `util.format`:
+   * https://nodejs.org/api/util.html#util_util_format_format_args
+   *
+   * Useful format strings:
+   *
+   * `%s` - string
+   * `%i` - int
+   * `%f` - float
+   * `%j` - JSON (prevents circular)
+   * `%o` - object (like `util.inspect`, but shows hidden properties/proxies)
+   * `%O` - object (like vanilla `util.inspect`)
+   * `%%` - the '%' character
+   */
+  format: string;
+
+  /** The list of parameters to feed into the format string. */
+  formatParameters: ReadonlyArray<unknown>;
+};
+
+export type ConsoleLogConfig<TLogScope> =
+  | ConsoleLogConfigObject<TLogScope>
+  | ConsoleLogConfigCallback<TLogScope>;
 
 // Reading envvars is expensive; cache it.
 const omitDebugLogs = !process.env.GRAPHILE_LOGGER_DEBUG;
+
+const DEFAULT_CONFIG: ConsoleLogConfig<any> = (level, message, scope, meta) => {
+  const scopeString = Object.entries(scope)
+    .map(([key, val]) => `${key}:${JSON.stringify(val)}`)
+    .join(",");
+
+  let format = "%s%s: %s";
+  const formatParameters: unknown[] = [
+    level.toUpperCase(),
+    scopeString ? `[${scopeString}]` : "",
+    message,
+  ];
+
+  if (Object.keys(meta).length > 0) {
+    format += " (%O)";
+    formatParameters.push(meta);
+  }
+
+  return { format, formatParameters };
+};
 
 /**
  * Lets you build a console log factory with custom log formatter. Only logs
@@ -173,30 +234,50 @@ const omitDebugLogs = !process.env.GRAPHILE_LOGGER_DEBUG;
  * is set.
  */
 export function makeConsoleLogFactory<TLogScope extends {}>(
-  { format, formatParameters }: ConsoleLogConfig<TLogScope> = {
-    format: "%s: %s (%O)",
-    formatParameters(level, message, scope, _meta) {
-      return [level.toUpperCase(), message, scope];
-    },
-  },
+  config: ConsoleLogConfig<TLogScope> = DEFAULT_CONFIG,
 ): LogFunctionFactory<TLogScope> {
   return function consoleLogFactory(scope) {
-    return (level, message, meta) => {
-      if (omitDebugLogs && level === "debug") {
-        return;
-      }
-
-      const method =
-        level === "error" || level === "info"
-          ? level
-          : level === "warning"
-          ? "warn"
-          : // `console.debug` in Node is just an alias for `console.log` anyway.
-            "log";
-
-      console[method](format, ...formatParameters(level, message, scope, meta));
-    };
+    if (typeof config === "function") {
+      return function dynamicFormatLog(level, message, meta) {
+        if (omitDebugLogs && level === "debug") {
+          return;
+        }
+        const { format, formatParameters } = config(
+          level,
+          message,
+          scope,
+          meta,
+        );
+        return doConsoleLog(level, format, formatParameters);
+      };
+    } else {
+      const { format, formatParameters } = config;
+      return function fixedFormatLog(level, message, meta) {
+        if (omitDebugLogs && level === "debug") {
+          return;
+        }
+        const params = formatParameters(level, message, scope, meta);
+        return doConsoleLog(level, format, params);
+      };
+    }
   };
+}
+
+/** @internal */
+function doConsoleLog(
+  level: LogLevel,
+  format: string,
+  formatParameters: readonly unknown[],
+): void {
+  const method =
+    level === "error" || level === "info"
+      ? level
+      : level === "warning"
+      ? "warn"
+      : // `console.debug` in Node is just an alias for `console.log` anyway.
+        "log";
+
+  console[method](format, ...formatParameters);
 }
 
 /**
