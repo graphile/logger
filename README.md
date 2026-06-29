@@ -220,6 +220,9 @@ which would output:
 
 ### 0.3.0
 
+`console` log factories now get access to `meta` - you may choose to output it
+should you wish.
+
 `LogLevel` is no longer a `const enum`; it is now simply a string union:
 
 ```ts
