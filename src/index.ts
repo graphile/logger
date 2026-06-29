@@ -174,9 +174,16 @@ const omitDebugLogs = !process.env.GRAPHILE_LOGGER_DEBUG;
  */
 export function makeConsoleLogFactory<TLogScope extends {}>(
   { format, formatParameters }: ConsoleLogConfig<TLogScope> = {
-    format: "%s: %s (%O)",
+    format: "%s%s: %s",
     formatParameters(level, message, scope, _meta) {
-      return [level.toUpperCase(), message, scope];
+      const scopeString = Object.entries(scope)
+        .map(([key, val]) => `${key}:${JSON.stringify(val)}`)
+        .join(",");
+      return [
+        level.toUpperCase(),
+        scopeString ? `[${scopeString}]` : "",
+        message,
+      ];
     },
   },
 ): LogFunctionFactory<TLogScope> {

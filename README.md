@@ -223,6 +223,9 @@ which would output:
 `console` log factories now get access to `meta` - you may choose to output it
 should you wish.
 
+The default console logger now changes the default format from
+`LEVEL: MESSAGE (SCOPE)` to `LEVEL[SCOPE]: MESSAGE`
+
 `LogLevel` is no longer a `const enum`; it is now simply a string union:
 
 ```ts
