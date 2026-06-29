@@ -242,6 +242,9 @@ export const LogLevel = {
 };
 ```
 
+`process.env.GRAPHILE_LOGGER_DEBUG` is now checked once on startup, rather than
+for each log message.
+
 ### 0.2.0
 
 Fixed log scope to be more type safe
