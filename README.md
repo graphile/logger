@@ -42,7 +42,7 @@ simple _log function factory_ which logs to `console`:
 function logFunctionFactory(scope) {
   return function logFunction(level, message, meta) {
     console.log(`${level}: ${message}`);
-  }
+  };
 }
 ```
 
@@ -220,13 +220,13 @@ which would output:
 
 ### 0.3.0
 
-`console` log factories now get access to `meta` - you may choose to output it
-should you wish. `console` log factories now also allow dynamic formatting, for
-example to use different formats when there's meta or not.
+`console` log factories now get access to `meta` - you may choose whether or not
+to output it via configuration. `console` log factories now also allow dynamic
+formatting, for example to use different formats when there's meta or not.
 
 The default console logger now changes the default format from
 `LEVEL: MESSAGE (SCOPE)` to `LEVEL[SCOPE]: MESSAGE (META)` &mdash; note in
-particular that the meta object is now output by default.
+particular that the meta object is now output by default (if not empty).
 
 `LogLevel` is no longer a `const enum`; it is now simply a string union:
 
