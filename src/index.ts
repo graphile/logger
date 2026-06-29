@@ -6,6 +6,8 @@ export interface LogMeta {
   [key: string]: unknown;
 }
 
+const EMPTY_OBJECT = Object.freeze({});
+
 /**
  * The 'level' of the log message, inspired by the 'winston' levels:
  * https://github.com/winstonjs/winston#logging-levels
@@ -56,7 +58,7 @@ export interface LogFunctionFactory<TLogScope extends {}> {
  * scope.
  */
 export interface LogFunction {
-  (level: LogLevel, message: string, meta?: LogMeta): void;
+  (level: LogLevel, message: string, meta: LogMeta): void;
 }
 
 /**
@@ -101,28 +103,28 @@ export class Logger<TLogScope extends {} = {}> {
    * Logs an `"error"` message.
    */
   public error(message: string, meta?: LogMeta): void {
-    return this.log("error", message, meta);
+    return this.log("error", message, meta ?? EMPTY_OBJECT);
   }
 
   /**
    * Logs an `"warning"` message.
    */
   public warn(message: string, meta?: LogMeta): void {
-    return this.log("warning", message, meta);
+    return this.log("warning", message, meta ?? EMPTY_OBJECT);
   }
 
   /**
    * Logs an `"info"` message.
    */
   public info(message: string, meta?: LogMeta): void {
-    return this.log("info", message, meta);
+    return this.log("info", message, meta ?? EMPTY_OBJECT);
   }
 
   /**
    * Logs an `"debug"` message.
    */
   public debug(message: string, meta?: LogMeta): void {
-    return this.log("debug", message, meta);
+    return this.log("debug", message, meta ?? EMPTY_OBJECT);
   }
 }
 
@@ -158,6 +160,7 @@ export interface ConsoleLogConfig<TLogScope> {
     level: LogLevel,
     message: string,
     scope: Partial<TLogScope>,
+    meta: LogMeta,
   ): Array<unknown>;
 }
 
@@ -169,13 +172,13 @@ export interface ConsoleLogConfig<TLogScope> {
 export function makeConsoleLogFactory<TLogScope extends {}>(
   { format, formatParameters }: ConsoleLogConfig<TLogScope> = {
     format: "%s: %s (%O)",
-    formatParameters(level, message, scope) {
+    formatParameters(level, message, scope, _meta) {
       return [level.toUpperCase(), message, scope];
     },
   },
-) {
-  return function consoleLogFactory(scope: Partial<TLogScope>) {
-    return (level: LogLevel, message: string) => {
+): LogFunctionFactory<TLogScope> {
+  return function consoleLogFactory(scope) {
+    return (level, message, meta) => {
       if (level === "debug" && !process.env.GRAPHILE_LOGGER_DEBUG) {
         return;
       }
@@ -188,7 +191,7 @@ export function makeConsoleLogFactory<TLogScope extends {}>(
           : // `console.debug` in Node is just an alias for `console.log` anyway.
             "log";
 
-      console[method](format, ...formatParameters(level, message, scope));
+      console[method](format, ...formatParameters(level, message, scope, meta));
     };
   };
 }
