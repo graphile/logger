@@ -225,7 +225,8 @@ should you wish. `console` log factories now also allow dynamic formatting, for
 example to use different formats when there's meta or not.
 
 The default console logger now changes the default format from
-`LEVEL: MESSAGE (SCOPE)` to `LEVEL[SCOPE]: MESSAGE`
+`LEVEL: MESSAGE (SCOPE)` to `LEVEL[SCOPE]: MESSAGE (META)` &mdash; note in
+particular that the meta object is now output by default.
 
 `LogLevel` is no longer a `const enum`; it is now simply a string union:
 
