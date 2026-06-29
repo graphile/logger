@@ -208,18 +208,24 @@ export type ConsoleLogConfig<TLogScope> =
 // Reading envvars is expensive; cache it.
 const omitDebugLogs = !process.env.GRAPHILE_LOGGER_DEBUG;
 
-const DEFAULT_CONFIG: ConsoleLogConfig<any> = {
-  format: "%s%s: %s",
-  formatParameters(level, message, scope, _meta) {
-    const scopeString = Object.entries(scope)
-      .map(([key, val]) => `${key}:${JSON.stringify(val)}`)
-      .join(",");
-    return [
+const DEFAULT_CONFIG: ConsoleLogConfig<any> = (
+  level,
+  message,
+  scope,
+  _meta,
+) => {
+  const scopeString = Object.entries(scope)
+    .map(([key, val]) => `${key}:${JSON.stringify(val)}`)
+    .join(",");
+
+  return {
+    format: "%s%s: %s",
+    formatParameters: [
       level.toUpperCase(),
       scopeString ? `[${scopeString}]` : "",
       message,
-    ];
-  },
+    ],
+  };
 };
 
 /**
