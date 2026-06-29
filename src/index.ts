@@ -213,24 +213,22 @@ const DEFAULT_CONFIG: ConsoleLogConfig<any> = (level, message, scope, meta) => {
     .map(([key, val]) => `${key}:${JSON.stringify(val)}`)
     .join(",");
 
+  const baseFormat = "%s%s: %s";
+  const baseParams = [
+    level.toUpperCase(),
+    scopeString ? `[${scopeString}]` : "",
+    message,
+  ];
+
   if (Object.keys(meta).length > 0) {
     return {
-      format: "%s%s: %s (%O)",
-      formatParameters: [
-        level.toUpperCase(),
-        scopeString ? `[${scopeString}]` : "",
-        message,
-        meta,
-      ],
+      format: `${baseFormat} (%O)`,
+      formatParameters: [...baseParams, meta],
     };
   } else {
     return {
-      format: "%s%s: %s",
-      formatParameters: [
-        level.toUpperCase(),
-        scopeString ? `[${scopeString}]` : "",
-        message,
-      ],
+      format: baseFormat,
+      formatParameters: baseParams,
     };
   }
 };
