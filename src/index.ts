@@ -167,26 +167,29 @@ export interface ConsoleLogConfig<TLogScope> {
 // Reading envvars is expensive; cache it.
 const omitDebugLogs = !process.env.GRAPHILE_LOGGER_DEBUG;
 
+const DEFAULT_CONFIG: ConsoleLogConfig<any> = {
+  format: "%s%s: %s",
+  formatParameters(level, message, scope, _meta) {
+    const scopeString = Object.entries(scope)
+      .map(([key, val]) => `${key}:${JSON.stringify(val)}`)
+      .join(",");
+    return [
+      level.toUpperCase(),
+      scopeString ? `[${scopeString}]` : "",
+      message,
+    ];
+  },
+};
+
 /**
  * Lets you build a console log factory with custom log formatter. Only logs
  * `DEBUG` level messages if the `GRAPHILE_LOGGER_DEBUG` environmental variable
  * is set.
  */
 export function makeConsoleLogFactory<TLogScope extends {}>(
-  { format, formatParameters }: ConsoleLogConfig<TLogScope> = {
-    format: "%s%s: %s",
-    formatParameters(level, message, scope, _meta) {
-      const scopeString = Object.entries(scope)
-        .map(([key, val]) => `${key}:${JSON.stringify(val)}`)
-        .join(",");
-      return [
-        level.toUpperCase(),
-        scopeString ? `[${scopeString}]` : "",
-        message,
-      ];
-    },
-  },
+  config: ConsoleLogConfig<TLogScope> = DEFAULT_CONFIG,
 ): LogFunctionFactory<TLogScope> {
+  const { format, formatParameters } = config;
   return function consoleLogFactory(scope) {
     return (level, message, meta) => {
       if (omitDebugLogs && level === "debug") {
