@@ -221,7 +221,8 @@ which would output:
 ### 0.3.0
 
 `console` log factories now get access to `meta` - you may choose to output it
-should you wish.
+should you wish. `console` log factories now also allow dynamic formatting, for
+example to use different formats when there's meta or not.
 
 The default console logger now changes the default format from
 `LEVEL: MESSAGE (SCOPE)` to `LEVEL[SCOPE]: MESSAGE`
