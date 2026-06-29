@@ -215,3 +215,34 @@ which would output:
 [core(3b0e05e1-beed-48a6-9d2b-055e47a29b5f)] INFO: Looking for jobs...
 [core(3b0e05e1-beed-48a6-9d2b-055e47a29b5f: my_task{84})] INFO: Starting job...
 ```
+
+## Version history
+
+### 0.3.0
+
+`LogLevel` is no longer a `const enum`; it is now simply a string union:
+
+```ts
+export type LogLevel = "error" | "warning" | "info" | "debug";
+```
+
+To maintain backwards compatibility we also export a deprecated `LogLevel`
+value:
+
+```ts
+/** @deprecated Just use string values: "error" | "warning" | "info" | "debug". */
+export const LogLevel = {
+  ERROR: "error",
+  WARNING: "warning",
+  INFO: "info",
+  DEBUG: "debug ",
+};
+```
+
+### 0.2.0
+
+Fixed log scope to be more type safe
+
+### 0.1.0
+
+Initial release

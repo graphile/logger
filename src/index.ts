@@ -10,32 +10,35 @@ export interface LogMeta {
  * The 'level' of the log message, inspired by the 'winston' levels:
  * https://github.com/winstonjs/winston#logging-levels
  */
-export const enum LogLevel {
+export type LogLevel = "error" | "warning" | "info" | "debug";
+
+/** @deprecated Just use string values: "error" | "warning" | "info" | "debug". */
+export const LogLevel = Object.freeze({
   /**
    * Critical log message indicating something unexpected went wrong. Similar
    * in interpretation to `console.error`.
    */
-  ERROR = "error",
+  ERROR: "error",
 
   /**
    * Import log message warning of something potentially troublesome. Similar
    * in interpretation to `console.warn`.
    */
-  WARNING = "warning",
+  WARNING: "warning",
 
   /**
    * General log message for information. Similar in interpretation to
    * `console.log`.
    */
-  INFO = "info",
+  INFO: "info",
 
   /**
    * Particularly verbose log message, normally only needed during debugging.
    * Due to verbosity, you typically would not want this level to be output.
    * Similar in interpretation to `console.debug`.
    */
-  DEBUG = "debug",
-}
+  DEBUG: "debug",
+} as const);
 
 /**
  * The `LogFunctionFactory` is a user-provided function that receives a scope
@@ -95,31 +98,31 @@ export class Logger<TLogScope extends {} = {}> {
   }
 
   /**
-   * Logs an `LogLevel.ERROR` message.
+   * Logs an `"error"` message.
    */
   public error(message: string, meta?: LogMeta): void {
-    return this.log(LogLevel.ERROR, message, meta);
+    return this.log("error", message, meta);
   }
 
   /**
-   * Logs an `LogLevel.WARN` message.
+   * Logs an `"warning"` message.
    */
   public warn(message: string, meta?: LogMeta): void {
-    return this.log(LogLevel.WARNING, message, meta);
+    return this.log("warning", message, meta);
   }
 
   /**
-   * Logs an `LogLevel.INFO` message.
+   * Logs an `"info"` message.
    */
   public info(message: string, meta?: LogMeta): void {
-    return this.log(LogLevel.INFO, message, meta);
+    return this.log("info", message, meta);
   }
 
   /**
-   * Logs an `LogLevel.DEBUG` message.
+   * Logs an `"debug"` message.
    */
   public debug(message: string, meta?: LogMeta): void {
-    return this.log(LogLevel.DEBUG, message, meta);
+    return this.log("debug", message, meta);
   }
 }
 
@@ -173,23 +176,17 @@ export function makeConsoleLogFactory<TLogScope extends {}>(
 ) {
   return function consoleLogFactory(scope: Partial<TLogScope>) {
     return (level: LogLevel, message: string) => {
-      if (level === LogLevel.DEBUG && !process.env.GRAPHILE_LOGGER_DEBUG) {
+      if (level === "debug" && !process.env.GRAPHILE_LOGGER_DEBUG) {
         return;
       }
 
-      const method = (() => {
-        switch (level) {
-          case LogLevel.ERROR:
-            return "error" as const;
-          case LogLevel.WARNING:
-            return "warn" as const;
-          case LogLevel.INFO:
-            return "info" as const;
-          default:
-            // `console.debug` in Node is just an alias for `console.log` anyway.
-            return "log" as const;
-        }
-      })();
+      const method =
+        level === "error" || level === "info"
+          ? level
+          : level === "warning"
+          ? "warn"
+          : // `console.debug` in Node is just an alias for `console.log` anyway.
+            "log";
 
       console[method](format, ...formatParameters(level, message, scope));
     };
