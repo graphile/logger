@@ -164,6 +164,9 @@ export interface ConsoleLogConfig<TLogScope> {
   ): Array<unknown>;
 }
 
+// Reading envvars is expensive; cache it.
+const omitDebugLogs = !process.env.GRAPHILE_LOGGER_DEBUG;
+
 /**
  * Lets you build a console log factory with custom log formatter. Only logs
  * `DEBUG` level messages if the `GRAPHILE_LOGGER_DEBUG` environmental variable
@@ -179,7 +182,7 @@ export function makeConsoleLogFactory<TLogScope extends {}>(
 ): LogFunctionFactory<TLogScope> {
   return function consoleLogFactory(scope) {
     return (level, message, meta) => {
-      if (level === "debug" && !process.env.GRAPHILE_LOGGER_DEBUG) {
+      if (omitDebugLogs && level === "debug") {
         return;
       }
 
